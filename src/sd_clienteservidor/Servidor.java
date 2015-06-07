@@ -5,12 +5,15 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.Scanner;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Servidor implements IServidor {
+public class Servidor extends UnicastRemoteObject implements IServidor {
 
     File arquivo1 = new File("arquivo1.txt");
     File arquivo2 = new File("arquivo2.txt");
@@ -28,7 +31,9 @@ public class Servidor implements IServidor {
 
     static public void main(String args[]) {
         try {
-            Servidor server = new Servidor();
+            Registry r = LocateRegistry.getRegistry();
+            r.bind("myserver", new Servidor());
+            System.out.println("The server has been started.");
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
@@ -105,5 +110,5 @@ public class Servidor implements IServidor {
             Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
         }
         return false;
-    }
+    }   
 }

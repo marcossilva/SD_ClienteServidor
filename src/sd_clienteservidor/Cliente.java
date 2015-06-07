@@ -23,6 +23,7 @@ public class Cliente implements Serializable {
                     iServer.escreve(args[1], Integer.parseInt(args[2]), args[3]);
                     break;
                 default:
+                    System.err.println("Unknown Parameter Specified");
                     break;
             }
         } catch (NotBoundException | MalformedURLException | RemoteException ex) {

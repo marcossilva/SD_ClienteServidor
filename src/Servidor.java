@@ -1,4 +1,3 @@
-package sd_clienteservidor;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -8,7 +7,10 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Scanner;
+import java.util.Stack;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,11 +28,17 @@ public class Servidor extends UnicastRemoteObject implements IServidor {
     int leitores[] = new int[3];
 
     public Servidor() throws RemoteException {
-
+        /*
+         1- Leitura
+         2- Escrita
+         3- Ordem de chegada
+         */
     }
 
     static public void main(String args[]) {
+        //args[0] define prioridade        
         try {
+            System.setSecurityManager(new SecurityManager());
             Registry r = LocateRegistry.getRegistry();
             r.bind("myserver", new Servidor());
             System.out.println("The server has been started.");
@@ -51,10 +59,13 @@ public class Servidor extends UnicastRemoteObject implements IServidor {
             if (nomeArquivo.length() > 8) {
                 numArquivo = Integer.parseInt(nomeArquivo.substring(7, 8)) - 1;
             }
+            System.out.println("Abrindo arquivo " + nomeArquivo);
             //Semáforo para esperar escritor sair do arquivo
             if (escritores[numArquivo].isFair()) {
                 read = new Scanner(arquivos[numArquivo]);
+                System.out.println("Lendo " + nomeArquivo);
                 leitores[numArquivo] = leitores[numArquivo] + 1;
+                System.out.println("Total de leitores lendo o arquivo no momento:\t" + leitores[numArquivo]);
                 //Consome o stream até a linha especificada se existir
                 while (numLinha > 0 && read.hasNextLine()) {
                     read.nextLine();
@@ -110,5 +121,5 @@ public class Servidor extends UnicastRemoteObject implements IServidor {
             Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
         }
         return false;
-    }   
+    }
 }

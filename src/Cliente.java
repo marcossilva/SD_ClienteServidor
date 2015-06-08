@@ -30,9 +30,15 @@ public abstract class Cliente implements IServidor, Serializable {
     }
 
     @Override
-    public boolean escreve(String nomeArquivo, int qntLinhas, String dados) throws RemoteException {
-        return iServer.escreve(nomeArquivo, qntLinhas, dados);
+    public String le(String nomeArquivo, int numLinha, int qntLinhas) throws RemoteException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
+    @Override
+    public boolean escreve(String nomeArquivo, int qntLinhas, String dados) throws RemoteException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
 }
 
 class Leitor extends Cliente implements Runnable {
@@ -53,6 +59,27 @@ class Leitor extends Cliente implements Runnable {
     @Override
     public String le(String nomeArquivo, int numLinha, int qntLinhas) throws RemoteException {
         return iServer.le(nomeArquivo, numLinha, qntLinhas);
+    }
+
+}
+class Escritor extends Cliente implements Runnable {
+
+    public Escritor() {
+        super();
+    }
+
+    @Override
+    public void run() {
+        try {
+            System.out.println(escreve("arquivo1.txt", 1, "novaLinha :D"));
+        } catch (RemoteException ex) {
+            Logger.getLogger(Leitor.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+        @Override
+    public boolean escreve(String nomeArquivo, int qntLinhas, String dados) throws RemoteException {
+        return iServer.escreve(nomeArquivo, qntLinhas, dados);
     }
 
 }

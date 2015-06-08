@@ -65,27 +65,33 @@ public class Servidor extends UnicastRemoteObject implements IServidor {
             //Semáforo para esperar escritor sair do arquivo
             switch (prioridade) {
                 case 1: //Prioridade para Leitor
-                    //Impede leitores de acessarem esse arquivo
-                    if (escritores[numArquivo].availablePermits() > 0) {
+                    leitores[numArquivo].acquire();
+                    counter_leitores[numArquivo] = counter_leitores[numArquivo] + 1;
+                    if (counter_leitores[numArquivo] == 1) {
                         escritores[numArquivo].acquire();
                     }
-                    //Abre um novo recurso para um leitor
-                    leitores[numArquivo].acquire();
                     break;
                 case 2: //Prioridade para Escritor
-                case 3: //Sem prioridade
-                    //Impede leitores de acessarem esse arquivo
-                    if (escritores[numArquivo].availablePermits() > 0) {
+                    while (escritores[numArquivo].availablePermits() < 0 && escritores[numArquivo].hasQueuedThreads()) {
+                        Thread.sleep(10);
+                    }
+                    leitores[numArquivo].acquire();
+                    counter_leitores[numArquivo] = counter_leitores[numArquivo] + 1;
+                    if (counter_leitores[numArquivo] == 1) {
                         escritores[numArquivo].acquire();
                     }
-                    //Abre um novo recurso para um leitor
+                    break;
+                case 3: //Sem prioridade
                     leitores[numArquivo].acquire();
+                    counter_leitores[numArquivo] = counter_leitores[numArquivo] + 1;
+                    if (counter_leitores[numArquivo] == 1) {
+                        escritores[numArquivo].acquire();
+                    }                    
                     break;
             }
             //Fim do semaforo
             read = new Scanner(arquivos[numArquivo]);
             System.out.println("Lendo " + nomeArquivo);
-            counter_leitores[numArquivo] = counter_leitores[numArquivo] + 1;
             System.out.println("Total de leitores lendo o arquivo no momento:\t" + counter_leitores[numArquivo]);
             //Consome o stream até a linha especificada se existir
             while (numLinha > 0 && read.hasNextLine()) {
@@ -95,7 +101,7 @@ public class Servidor extends UnicastRemoteObject implements IServidor {
             if (numLinha > 0) {
                 System.err.println("Invalid line specified! Please check it!");
             } else {
-                while (qntLinhas > 0 && read.hasNextLine()) {                    
+                while (qntLinhas > 0 && read.hasNextLine()) {
                     //nextLine consome o caracter quebra de linha
                     lido += read.nextLine() + "\n";
                     qntLinhas--;
@@ -104,28 +110,28 @@ public class Servidor extends UnicastRemoteObject implements IServidor {
                     System.err.println("There specified quantity of lines required is not avaiable. Returning all the lines read...");
                 }
             }
-            counter_leitores[numArquivo] = counter_leitores[numArquivo] - 1;
             //Libera recursos
             switch (prioridade) {
-                case 1: //Prioridade para Leitor
-                    //Libera o recurso do leitor
+                case 1: //Prioridade para Leitor                    
+                    counter_leitores[numArquivo] = counter_leitores[numArquivo] - 1;
                     leitores[numArquivo].release();
-                    //Libera a escrita sss não houver mais nenhum leitor na fila
-                    if (!leitores[numArquivo].hasQueuedThreads()) {
+                    if (counter_leitores[numArquivo] == 0) {
                         escritores[numArquivo].release();
                     }
                     break;
                 case 2: //Prioridade para Escritor
-                    //Precisa esperar todos os leitores atuais acabarem
-                    if (!escritores[numArquivo].hasQueuedThreads()) {
+                    counter_leitores[numArquivo] = counter_leitores[numArquivo] - 1;
+                    leitores[numArquivo].release();
+                    if (counter_leitores[numArquivo] == 0) {
                         escritores[numArquivo].release();
                     }
                     break;
                 case 3: //Sem prioridade
-                    //Libera o recurso do leitor
+                    counter_leitores[numArquivo] = counter_leitores[numArquivo] - 1;
                     leitores[numArquivo].release();
-                    //Libera a escrita sss não houver mais nenhum leitor utilizando o recurso
-                    escritores[numArquivo].release();
+                    if (counter_leitores[numArquivo] == 0) {
+                        escritores[numArquivo].release();
+                    }
                     break;
             }
         } catch (NumberFormatException nf) {
@@ -148,9 +154,6 @@ public class Servidor extends UnicastRemoteObject implements IServidor {
             //Semáforo
             switch (prioridade) {
                 case 1: //Prioridade para leitor
-                    while (leitores[numArquivo].hasQueuedThreads()) {
-                        Thread.sleep(10);
-                    }
                     escritores[numArquivo].acquire();
                     break;
                 case 2:
@@ -169,12 +172,10 @@ public class Servidor extends UnicastRemoteObject implements IServidor {
             write.close();
             switch (prioridade) {
                 case 1: //Prioridade para leitor
-                    //Libera o recurso de escrita
                     escritores[numArquivo].release();
                     break;
                 case 2: //Prioridade para escritor
                     //Verifica se existe algum leitor na fila
-
                     escritores[numArquivo].release();
                     break;
                 case 3:

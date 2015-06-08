@@ -86,7 +86,7 @@ public class Servidor extends UnicastRemoteObject implements IServidor {
                     counter_leitores[numArquivo] = counter_leitores[numArquivo] + 1;
                     if (counter_leitores[numArquivo] == 1) {
                         escritores[numArquivo].acquire();
-                    }                    
+                    }
                     break;
             }
             //Fim do semaforo
@@ -154,9 +154,14 @@ public class Servidor extends UnicastRemoteObject implements IServidor {
             //Semáforo
             switch (prioridade) {
                 case 1: //Prioridade para leitor
+                    while (leitores[numArquivo].hasQueuedThreads() || leitores[numArquivo].availablePermits() < 3) {
+                        Thread.sleep(10);
+                    }
                     escritores[numArquivo].acquire();
                     break;
-                case 2:
+                case 2: //Prioridade para escritor
+                    
+                    break;
                 case 3:
                     //Reserva o recurso de escrita
                     escritores[numArquivo].acquire();

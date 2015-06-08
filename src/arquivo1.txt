@@ -1,0 +1,3 @@
+Linha 0 arquivo1
+Batatas são gostosas
+42

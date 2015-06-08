@@ -1,5 +1,4 @@
 
-
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
@@ -8,13 +7,12 @@ import java.rmi.RemoteException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Cliente implements IServidor, Serializable {
+public abstract class Cliente implements IServidor, Serializable {
 
     IServidor iServer;
 
     public Cliente() {
         try {
-            System.setSecurityManager(new SecurityManager());
             iServer = (IServidor) Naming.lookup("rmi://localhost/myserver");
         } catch (NotBoundException | MalformedURLException | RemoteException ex) {
             Logger.getLogger(Cliente.class.getName()).log(Level.SEVERE, null, ex);
@@ -22,18 +20,33 @@ public class Cliente implements IServidor, Serializable {
     }
 
     static public void main(String args[]) {
-        Cliente cli1 = new Cliente();
-        Cliente cli2 = new Cliente();
-        Cliente cli3 = new Cliente();
-        
+        Thread t1 = new Thread(new Leitor());
+        Thread t2 = new Thread(new Leitor());
+        Thread t3 = new Thread(new Leitor());
+        System.out.println("");
+        t1.start();
+        t2.start();
+        t3.start();
+    }
+
+    @Override
+    public boolean escreve(String nomeArquivo, int qntLinhas, String dados) throws RemoteException {
+        return iServer.escreve(nomeArquivo, qntLinhas, dados);
+    }
+}
+
+class Leitor extends Cliente implements Runnable {
+
+    public Leitor() {
+        super();
+    }
+
+    @Override
+    public void run() {
         try {
-            System.out.println("Cliente 1 - Lendo linha 0 - Ler 1 linha - Leu:");
-            System.out.println(cli1.le("arquivo1.txt", 0, 1));
-            System.out.println(cli2.le("arquivo2.txt", 0, 1));
-            System.out.println(cli3.le("arquivo3.txt", 0, 1));
-            
+            System.out.println(le("arquivo1.txt", 0, 1));
         } catch (RemoteException ex) {
-            Logger.getLogger(Cliente.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Leitor.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -42,8 +55,4 @@ public class Cliente implements IServidor, Serializable {
         return iServer.le(nomeArquivo, numLinha, qntLinhas);
     }
 
-    @Override
-    public boolean escreve(String nomeArquivo, int qntLinhas, String dados) throws RemoteException {
-        return iServer.escreve(nomeArquivo, qntLinhas, dados);
-    }
 }
